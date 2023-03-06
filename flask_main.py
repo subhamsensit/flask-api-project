@@ -1,7 +1,7 @@
 from flask import Flask,jsonify
 import subprocess,sys,json,os
 from datetime import datetime
-import logging
+import logging,time
 app = Flask(__name__)
 # logger code
 # setting time
@@ -18,7 +18,12 @@ log_path_certification=os.path.join(current_directory,"Log_files","flask_app.log
 logger=logging.getLogger("zoom-trigger")
 logger.setLevel(logging.DEBUG)
 format=logging.Formatter("'%(asctime)s %(message)s")
+fh=logging.FileHandler(log_path_certification,mode="w")
+fh.setFormatter(format)
+logger.addHandler(fh)
+logger.debug("======starting of  Flask log ========")
 
+# initializing configparser to read Configurations.ini
 
 
 
@@ -29,13 +34,15 @@ def trigger_script():
         theproc = subprocess.Popen([sys.executable, r"C:\Users\Zscaler\Documents\backup-dr-db\MR-1993-DR-Zoom-call\dr_zoom_team_call.py"])
         theproc.communicate()
         # reading result.json file
+        time.sleep(5)
         result_file_path=r"C:\Users\Zscaler\Documents\backup-dr-db\MR-1993-DR-Zoom-call\result.json"
         with open(result_file_path,"r") as fh:
             logger.debug("reading the result.json file")
             data = json.load(fh)
         logger.debug(f"Returning result to client {data}")
         return jsonify(data)
-    except:
+    except Exception as e :
+        logger.debug(f"Ecxception occured as {e} in Flask script returning value")
         logger.debug("Failed to send data to client")
         data={"zoom_call_status":False,"Status":404}
         return jsonify(data)
